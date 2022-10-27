@@ -10,7 +10,8 @@ This Github holds the code involved with trying to modify and enhance the needle
 1. Download Anaconda
 2. Download IDE platform of choice (VSCode, Pycharm, etc..)
 3. Make sure the clarius environment is the active kernel use for running the code on the preferred IDE 
-
+4. Open the Anaconda Prompt and write this line on the terminal: conda env create -f {Directory to this repository}\clarius.yaml
+5. Once the environment is installed, activate the environment by writing: conda activate clarius
 
 ## Connecting and Running the Clarius Program 
 Need to edit later
