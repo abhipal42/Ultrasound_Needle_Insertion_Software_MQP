@@ -7,7 +7,7 @@ addpath("Data Analysis\matlab_image_evaluation_module\")
 
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % Insert image load
-image = imread("Data\materials_test_V2\ground_truth_materialTest.jpeg");
+image = imread("Data\materials_test_V2\TPU bottom\capture_13_2023-02-05T15-30-26.jpeg");
 
 fig_target = image;
 hold on
@@ -47,8 +47,9 @@ rectangle('Position',[det_left det_top half_width*2 half_height*2],'EdgeColor','
 rectangle('Position', [det_left2 det_top2 half_width*2 half_height*2],'EdgeColor','g');
 
 %draw line
-line = yline(y3, 'Color', 'yellow');
-lineVector = fig_target(round(y3),500:800);
+% yline(y3, 'Color', 'yellow');
+rectangle('Position',[round(x3), round(y3) 300 1], 'EdgeColor', 'b');
+lineVector = fig_target(round(y3),round(x3):(round(x3)+300));
 
 
 % Save figure for reference (saving the defined window image would be helpful as well)
@@ -77,16 +78,18 @@ plot(lineVector)
 cnr_value = CNR(target_ROI, background_ROI)
 gt_cnr = 5.4607;
 
-relative_percent = (cnr_value/gt_cnr) * 100
+relative_percent_cnr = (cnr_value/gt_cnr) * 100
 
 
 %%%%% FWHM and SNR CALCULATIONS %%%%%%%
 fwhm_value = FWHM(lineVector) %unit is in pixels --> later can convert pixel to mm
+gt_fwhm = 10;
 
-relative_percent = fwhm_value
-
-% fwhm_value2 = FWHM_gaussian_fitting(lineVector)
+% relative_percent_fwhm = (fwhm_value/gt_fwhm) * 100
 
 snr_value = SNR(lineVector)
+gt_snr = 28.5671;
+
+% relative_percent_snr = (snr_value/gt_snr) * 100
 
 rmpath("Data Analysis\matlab_image_evaluation_module\")
