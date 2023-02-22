@@ -14,4 +14,13 @@ This Github holds the code involved with trying to modify and enhance the needle
 5. Once the environment is installed, activate the environment by writing: conda activate clarius
 
 ## Connecting and Running the Clarius Program 
-Need to edit later
+1. disable all firewalls on PC
+2. open mobile hotspot on PC
+3. connect clarius mobile to hotspot
+4. connect clarius probe to clarius app
+5. check to make sure everything is connected on PC
+6. Open anaconda prompt
+7. enter "conda activate clarius"
+8. cd into desired directory
+9. enter: "python realtime_NeedleVizAlgorithm_demo.py
+10. make sure to input address and port
