@@ -8,9 +8,6 @@ import numpy as np
 import cv2
 from PySide2 import QtCore, QtGui, QtWidgets
 from PySide2.QtCore import Qt, Slot, Signal
-
-
-import numpy as np
 import math
 
 
@@ -124,42 +121,42 @@ class NeedleVisualization:
     return houghline
   
   def line_creation2(self, source_image, overlay):
-	
-	lines = cv2.HoughLinesP(source_image, rho=6, theta=np.pi / 2, threshold=160, lines=np.array([]), minLineLength=40, maxLineGap=4)
 
-	overlay_image = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
-	houghline = overlay_image.copy()
-	length_line_list = []
-	
-	if lines is not None:
-		for line in lines:
-			x1 = line[0][0]
-			y1 = line[0][1]
-			x2 = line[0][2]
-			y2 = line[0][3]
+    lines = cv2.HoughLinesP(source_image, rho=6, theta=np.pi / 2, threshold=160, lines=np.array([]), minLineLength=40, maxLineGap=4)
 
-			start_point = (x1, y1)
-			end_point = (x2, y2)
+    overlay_image = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
+    houghline = overlay_image.copy()
+    length_line_list = []
+
+    if lines is not None:
+        for line in lines:
+            x1 = line[0][0]
+            y1 = line[0][1]
+            x2 = line[0][2]
+            y2 = line[0][3]
+
+            start_point = (x1, y1)
+            end_point = (x2, y2)
                 
-			lengthOfLine = math.sqrt(abs(x2-x1)^2 + abs(y2-y1)^2)
-			length_line_list.append(lengthOfLine)
+            lengthOfLine = math.sqrt(abs(x2-x1)^2 + abs(y2-y1)^2)
+            length_line_list.append(lengthOfLine)
 		
-		index_number = length_line_list.index(max(length_line_list))
+        index_number = length_line_list.index(max(length_line_list))
 		
-		x1 = lines[index_number][0][0]
-		y1 = lines[index_number][0][1]
-		x2 = lines[index_number][0][2]
-		y2 = lines[index_number][0][3]
+        x1 = lines[index_number][0][0]
+        y1 = lines[index_number][0][1]
+        x2 = lines[index_number][0][2]
+        y2 = lines[index_number][0][3]
 
-		start_point = (x1, y1)
-		end_point = (x2, y2)
+        start_point = (x1, y1)
+        end_point = (x2, y2)
 
-		color = (0, 255, 0) # Green color in BGR
-		thickness = 2 # Line thickness of 9 px
+        color = (0, 255, 0) # Green color in BGR
+        thickness = 2 # Line thickness of 9 px
 
-		cv2.line(houghline, start_point, end_point, color, thickness)
+        cv2.line(houghline, start_point, end_point, color, thickness)
 	
-	return houghline
+    return houghline
 		  
 
   def ROI_creation(self, source_image, row_start, row_end, col_start, col_end):
@@ -198,19 +195,20 @@ class NeedleVisualization:
     # - morphological operations
     element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
     eroded = cv2.erode(threshold, element)
-    dilated = cv2.dilate(eroded, element)
+    self.dilated = cv2.dilate(eroded, element)
     #############################################################
 
     # Hough Line Transforms
     #############################################################
-    houghline = self.line_creation(dilated, self.resized_frame)
+    houghline = self.line_creation2(self.dilated, self.resized_frame)
     #############################################################
     return houghline
 
   def show_needle_viz(self, houghline):
     resized_frame = cv2.cvtColor(self.resized_frame, cv2.COLOR_GRAY2BGR)
     overlay = cv2.cvtColor(houghline, cv2.COLOR_RGB2BGR)
-    stack = np.hstack((resized_frame, overlay))
+    algorithm = cv2.cvtColor(self.dilated, cv2.COLOR_GRAY2BGR)
+    stack = np.hstack((resized_frame, overlay, algorithm))
     cv2.imshow("stacked", stack)
 
 # main function
