@@ -157,7 +157,42 @@ class NeedleVisualization:
         cv2.line(houghline, start_point, end_point, color, thickness)
 	
     return houghline
-		  
+  
+  def circle_creation(self, source_image, overlay):
+    lines = cv2.HoughLinesP(source_image, rho=6, theta=np.pi / 2, threshold=160, lines=np.array([]), minLineLength=40, maxLineGap=4)
+    overlay_image = cv2.cvtColor(overlay, cv2.COLOR_GRAY2RGB)
+
+    houghcircle = overlay_image.copy()
+
+    length_line_list = []
+
+    if lines is not None:
+            for line in lines:
+
+                x1 = line[0][0]
+                y1 = line[0][1]
+                x2 = line[0][2]
+                y2 = line[0][3]
+                
+                lengthOfLine = math.sqrt(abs(x2-x1)^2 + abs(y2-y1)^2)
+                length_line_list.append(lengthOfLine)
+
+            index_number = length_line_list.index(max(length_line_list))
+
+            x1 = lines[index_number][0][0]
+            y1 = lines[index_number][0][1]
+            x2 = lines[index_number][0][2]
+            y2 = lines[index_number][0][3]
+
+            start_point = (x1, y1)
+
+            color = (0, 255, 0) # Green color in BGR
+            thickness = 2 # Line thickness of 9 px
+            radius = 5 #circle radius
+
+            cv2.circle(houghcircle, start_point, radius, color, thickness)
+	  
+    return houghcircle
 
   def ROI_creation(self, source_image, row_start, row_end, col_start, col_end):
     # old one was [94:348, 166:275]
@@ -204,11 +239,51 @@ class NeedleVisualization:
     #############################################################
     return houghline
 
-  def show_needle_viz(self, houghline):
+  def detect_needle_tip(self):
+    # Achieving desired region of interest within Raw Frame
+    ##############################################################
+    ROI_image = self.ROI_creation(
+        self.resized_frame, self.rstart, self.rend, self.cstart, self.cend)
+    ##############################################################
+
+    # Applying Paper Algorithm Filters
+    #############################################################
+    # gabor_filter = cv2.getGaborKernel((6,6), sigma=0.5, theta=0, lambd=0.5, gamma=0.8, psi=0, ktype=cv2.CV_32F)
+    gabor_filter = cv2.getGaborKernel((3, 3), sigma=0.95, theta=0, lambd=5, gamma=0.8, psi=0, ktype=cv2.CV_32F)
+    # gabor_filter = cv2.getGaborKernel((3,3), sigma=0.5, theta=0, lambd=30, gamma=0.8, psi=0, ktype=cv2.CV_32F)
+
+    gabor_output = cv2.filter2D(ROI_image, -1, gabor_filter)
+
+    # Binarized image is divided into grids for needle axis localization.
+    # - Median filter
+    median_filter = cv2.medianBlur(gabor_output, 7)
+    # - automatic thresholding
+    threshold = cv2.threshold(
+        median_filter, 250, 255, cv2.THRESH_BINARY)[1]
+    # - morphological operations
+    element = cv2.getStructuringElement(cv2.MORPH_RECT, (3, 3))
+    eroded = cv2.erode(threshold, element)
+    self.dilated = cv2.dilate(eroded, element)
+    #############################################################
+
+    # Hough Line Transforms
+    #############################################################
+    houghcircle = self.circle_creation(self.dilated, self.resized_frame)
+    #############################################################
+    return houghcircle
+	  
+
+  def show_needle_viz(self, houghline, houghcircle, debug=False):
     resized_frame = cv2.cvtColor(self.resized_frame, cv2.COLOR_GRAY2BGR)
     overlay = cv2.cvtColor(houghline, cv2.COLOR_RGB2BGR)
     algorithm = cv2.cvtColor(self.dilated, cv2.COLOR_GRAY2BGR)
-    stack = np.hstack((resized_frame, overlay, algorithm))
+    tip = cv2.cvtColor(houghcircle, cv2.COLOR_RGB2BGR)
+    
+    if debug:
+      stack = np.hstack((resized_frame, overlay, algorithm, tip))
+    else:
+      stack = np.hstack((resized_frame, overlay))
+    
     cv2.imshow("stacked", stack)
 
 # main function
@@ -265,7 +340,8 @@ def main():
 					# cv2.imshow('clarius', processed)
 					needle_viz.insert_frame(processed)
 					houghline = needle_viz.detect_needle_line()
-					needle_viz.show_needle_viz(houghline)
+					houghcircle = needle_viz.detect_needle_tip()
+					needle_viz.show_needle_viz(houghline, houghcircle, debug=True)
                     
 			key = cv2.waitKey(10)
 			if key == ord('q'):
